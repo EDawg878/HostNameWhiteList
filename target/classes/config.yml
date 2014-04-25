@@ -1,0 +1,3 @@
+warning: '&cYou entered the wrong IP address, please use &3example.com &cinstead'
+allowed-host-names:
+    - 'localhost'
