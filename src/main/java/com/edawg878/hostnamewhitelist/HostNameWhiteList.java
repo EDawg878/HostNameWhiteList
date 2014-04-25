@@ -33,6 +33,7 @@ public class HostNameWhiteList extends Plugin implements Listener {
     private HostNameWhiteList instance;
     private Set<String> validHostNames;
     private String warning;
+    private boolean checkSubdomains;
 
     @Override
     public void onEnable() {
@@ -57,6 +58,7 @@ public class HostNameWhiteList extends Plugin implements Listener {
             Configuration config = configProvider.load(file);
             warning = ChatColor.translateAlternateColorCodes('&', config.getString("warning"));
             validHostNames = new HashSet<>(config.getStringList("allowed-host-names"));
+            checkSubdomains = config.getBoolean("check-subdomains");
         } catch (IOException e) {
             getLogger().log(Level.SEVERE, "Error loading configuration", e);
         }
@@ -64,7 +66,7 @@ public class HostNameWhiteList extends Plugin implements Listener {
 
     private boolean isBlocked(PendingConnection conn) {
         InetSocketAddress address = conn.getVirtualHost();
-        String hostname = address.getHostName();
+        String hostname = checkSubdomains ? address.getHostName() : address.getAddress().getCanonicalHostName();
         int index = hostname.indexOf(':');
         if(index != -1) {
             hostname = hostname.substring(0, index);
