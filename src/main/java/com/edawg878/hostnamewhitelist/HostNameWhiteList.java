@@ -34,6 +34,7 @@ public class HostNameWhiteList extends Plugin implements Listener {
     private Set<String> validHostNames;
     private String warning;
     private boolean checkSubdomains;
+    private boolean ignoreCase;
 
     @Override
     public void onEnable() {
@@ -57,26 +58,42 @@ public class HostNameWhiteList extends Plugin implements Listener {
             }
             Configuration config = configProvider.load(file);
             warning = ChatColor.translateAlternateColorCodes('&', config.getString("warning"));
-            validHostNames = new HashSet<>(config.getStringList("allowed-host-names"));
+            Set<String> actualHostNames = new HashSet<>(config.getStringList("allowed-host-names"));
+            validHostNames = adjustHostNames(actualHostNames);
             checkSubdomains = config.getBoolean("check-subdomains");
+            ignoreCase = config.getBoolean("ignore-case");
         } catch (IOException e) {
             getLogger().log(Level.SEVERE, "Error loading configuration", e);
         }
+    }
+
+    private Set<String> adjustHostNames(Set<String> hosts) {
+        if(ignoreCase) {
+            Set<String> adjusted = new HashSet<>();
+            for(String host : hosts) {
+                adjusted.add(host.toLowerCase());
+            }
+            return adjusted;
+        }
+        return hosts;
     }
 
     private boolean isBlocked(PendingConnection conn) {
         InetSocketAddress address = conn.getVirtualHost();
         String hostname = checkSubdomains ? address.getHostName() : address.getAddress().getCanonicalHostName();
         int index = hostname.indexOf(':');
-        if(index != -1) {
+        if (index != -1) {
             hostname = hostname.substring(0, index);
+        }
+        if (ignoreCase) {
+            hostname = hostname.toLowerCase();
         }
         return !validHostNames.contains(hostname);
     }
 
     @EventHandler
     public void onPreLogin(PreLoginEvent event) {
-        if(isBlocked(event.getConnection())) {
+        if (isBlocked(event.getConnection())) {
             event.setCancelled(true);
             event.setCancelReason(warning);
         }
@@ -84,7 +101,7 @@ public class HostNameWhiteList extends Plugin implements Listener {
 
     @EventHandler
     public void onPing(ProxyPingEvent event) {
-        if(isBlocked(event.getConnection())) {
+        if (isBlocked(event.getConnection())) {
             ServerPing ping = event.getResponse();
             ping.setDescription(warning);
             event.setResponse(ping);

@@ -13,12 +13,12 @@ public class HostNameWhiteListCommand extends Command {
 
     public HostNameWhiteListCommand(HostNameWhiteList plugin) {
         super("hostnamewhitelist", "hostnamewhitelist.admin", "hnw");
-        this. plugin = plugin;
+        this.plugin = plugin;
     }
 
     @Override
     public void execute(CommandSender cs, String[] args) {
-        if(args.length >= 1 && args[0].equalsIgnoreCase("reload")) {
+        if (args.length >= 1 && args[0].equalsIgnoreCase("reload")) {
             plugin.loadConfig();
             cs.sendMessage(new TextComponent("Configuration reloaded"));
         }
