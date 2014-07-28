@@ -100,7 +100,7 @@ public class HostNameWhiteList extends Plugin implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPrority.HIGH)
+    @EventHandler(priority = EventPriority.HIGH)
     public void onPing(ProxyPingEvent event) {
         if (isBlocked(event.getConnection())) {
             ServerPing ping = event.getResponse();
