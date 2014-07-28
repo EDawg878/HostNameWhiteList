@@ -14,6 +14,7 @@ import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
 import net.md_5.bungee.event.EventHandler;
+import net.md_5.bungee.event.EventPriority;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -99,7 +100,7 @@ public class HostNameWhiteList extends Plugin implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPrority.HIGH)
     public void onPing(ProxyPingEvent event) {
         if (isBlocked(event.getConnection())) {
             ServerPing ping = event.getResponse();
