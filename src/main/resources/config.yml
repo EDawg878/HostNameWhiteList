@@ -1,5 +1,4 @@
 warning: '&cYou entered the wrong IP address, please use &3example.com &cinstead'
-check-subdomains: true
 ignore-case: true
 allowed-host-names:
     - 'localhost'

@@ -35,7 +35,6 @@ public class HostNameWhiteList extends Plugin implements Listener {
     private HostNameWhiteList instance;
     private Set<String> validHostNames;
     private String warning;
-    private boolean checkSubdomains;
     private boolean ignoreCase;
 
     @Override
@@ -62,8 +61,7 @@ public class HostNameWhiteList extends Plugin implements Listener {
             warning = ChatColor.translateAlternateColorCodes('&', config.getString("warning"));
             Set<String> actualHostNames = new HashSet<>(config.getStringList("allowed-host-names"));
             validHostNames = adjustHostNames(actualHostNames);
-            checkSubdomains = config.getBoolean("check-subdomains");
-            ignoreCase = config.getBoolean("ignore-case");
+            ignoreCase = config.getBoolean("ignore-case", true);
         } catch (IOException e) {
             getLogger().log(Level.SEVERE, "Error loading configuration", e);
         }
@@ -81,13 +79,7 @@ public class HostNameWhiteList extends Plugin implements Listener {
     }
 
     private boolean isBlocked(PendingConnection conn) {
-        InetSocketAddress socketAddress = conn.getVirtualHost();
-        InetAddress address = socketAddress.getAddress();
-        String hostname = checkSubdomains || address == null ? socketAddress.getHostName() : address.getCanonicalHostName();
-        int index = hostname.indexOf(':');
-        if (index != -1) {
-            hostname = hostname.substring(0, index);
-        }
+        String hostname = conn.getVirtualHost().getHostName();
         if (ignoreCase) {
             hostname = hostname.toLowerCase();
         }
