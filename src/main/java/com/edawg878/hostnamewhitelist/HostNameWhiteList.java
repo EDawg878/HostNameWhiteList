@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.HashSet;
 import java.util.Set;
@@ -80,8 +81,9 @@ public class HostNameWhiteList extends Plugin implements Listener {
     }
 
     private boolean isBlocked(PendingConnection conn) {
-        InetSocketAddress address = conn.getVirtualHost();
-        String hostname = checkSubdomains ? address.getHostName() : address.getAddress().getCanonicalHostName();
+        InetSocketAddress socketAddress = conn.getVirtualHost();
+        InetAddress address = socketAddress.getAddress();
+        String hostname = checkSubdomains || address == null ? socketAddress.getHostName() : address.getCanonicalHostName();
         int index = hostname.indexOf(':');
         if (index != -1) {
             hostname = hostname.substring(0, index);
