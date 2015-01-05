@@ -1,4 +1,4 @@
-package com.edawg878.hostnamewhitelist;
+package com.edawg878.hostnamewhitelist.bungee;
 
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -7,11 +7,11 @@ import net.md_5.bungee.api.plugin.Command;
 /**
  * @author EDawg878 <EDawg878@gmail.com>
  */
-public class HostNameWhiteListCommand extends Command {
+public class BungeeCommand extends Command {
 
-    private final HostNameWhiteList plugin;
+    private final BungeeHostNameWhiteList plugin;
 
-    public HostNameWhiteListCommand(HostNameWhiteList plugin) {
+    public BungeeCommand(BungeeHostNameWhiteList plugin) {
         super("hostnamewhitelist", "hostnamewhitelist.admin", "hnw");
         this.plugin = plugin;
     }
@@ -19,7 +19,7 @@ public class HostNameWhiteListCommand extends Command {
     @Override
     public void execute(CommandSender cs, String[] args) {
         if (args.length >= 1 && args[0].equalsIgnoreCase("reload")) {
-            plugin.loadConfig();
+            plugin.reloadConfig();
             cs.sendMessage(new TextComponent("Configuration reloaded"));
         }
     }

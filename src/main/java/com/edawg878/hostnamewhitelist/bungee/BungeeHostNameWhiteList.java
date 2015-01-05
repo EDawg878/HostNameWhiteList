@@ -1,12 +1,12 @@
-package com.edawg878.hostnamewhitelist;
+package com.edawg878.hostnamewhitelist.bungee;
 
+import com.edawg878.hostnamewhitelist.common.Util;
 import com.google.common.io.ByteStreams;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.ServerPing;
 import net.md_5.bungee.api.connection.PendingConnection;
 import net.md_5.bungee.api.event.PreLoginEvent;
 import net.md_5.bungee.api.event.ProxyPingEvent;
-import net.md_5.bungee.api.plugin.Event;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.PluginManager;
@@ -20,33 +20,30 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
 
 /**
  * @author EDawg878 <EDawg878@gmail.com>
  */
-public class HostNameWhiteList extends Plugin implements Listener {
+public class BungeeHostNameWhiteList extends Plugin implements Listener {
 
     private static final ConfigurationProvider configProvider = ConfigurationProvider.getProvider(YamlConfiguration.class);
-    private HostNameWhiteList instance;
     private Set<String> validHostNames;
     private String warning;
     private boolean ignoreCase;
+    private boolean blockLegacy;
 
     @Override
     public void onEnable() {
-        instance = this;
-        loadConfig();
+        reloadConfig();
         PluginManager pm = getProxy().getPluginManager();
-        pm.registerCommand(this, new HostNameWhiteListCommand(this));
+        pm.registerCommand(this, new BungeeCommand(this));
         pm.registerListener(this, this);
     }
 
-    protected void loadConfig() {
+    public void reloadConfig() {
         try {
             File file = new File(getDataFolder(), "config.yml");
             if (!file.exists()) {
@@ -59,31 +56,12 @@ public class HostNameWhiteList extends Plugin implements Listener {
             }
             Configuration config = configProvider.load(file);
             warning = ChatColor.translateAlternateColorCodes('&', config.getString("warning"));
-            Set<String> actualHostNames = new HashSet<>(config.getStringList("allowed-host-names"));
-            validHostNames = adjustHostNames(actualHostNames);
             ignoreCase = config.getBoolean("ignore-case", true);
+            validHostNames = Util.getHostNames(config.getStringList("allowed-host-names"), ignoreCase);
+            blockLegacy = config.getBoolean("block-legacy", true);
         } catch (IOException e) {
             getLogger().log(Level.SEVERE, "Error loading configuration", e);
         }
-    }
-
-    private Set<String> adjustHostNames(Set<String> hosts) {
-        if(ignoreCase) {
-            Set<String> adjusted = new HashSet<>();
-            for(String host : hosts) {
-                adjusted.add(host.toLowerCase());
-            }
-            return adjusted;
-        }
-        return hosts;
-    }
-
-    private boolean isBlocked(PendingConnection conn) {
-        String hostname = conn.getVirtualHost().getHostName();
-        if (ignoreCase) {
-            hostname = hostname.toLowerCase();
-        }
-        return !validHostNames.contains(hostname);
     }
 
     @EventHandler
@@ -100,6 +78,16 @@ public class HostNameWhiteList extends Plugin implements Listener {
             ServerPing ping = event.getResponse();
             ping.setDescription(warning);
             event.setResponse(ping);
+        }
+    }
+
+    private boolean isBlocked(PendingConnection conn) {
+        InetSocketAddress address = conn.getVirtualHost();
+        if (conn.isLegacy() || address == null) {
+            return blockLegacy;
+        } else {
+            String hostname = ignoreCase ? address.getHostName().toLowerCase() : address.getHostName();
+            return !validHostNames.contains(hostname);
         }
     }
 
